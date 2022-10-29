@@ -24,7 +24,7 @@ services:
           PUID: $UID
           PGID: $GID
         volumes:
-            - /Media/nzbget/config:/config
+            - /mediaServer/nzbget/config:/config
             - /Media/nzbget/downloads:/downloads
         ports:
             - 6789:6789
@@ -86,5 +86,18 @@ services:
           PIHOLE_DNS_: 1.1.1.1;1.1.0.0
         # Volumes store your data between container upgrades
         volumes:
-          - './etc-pihole:/etc/pihole'
-          - './etc-dnsmasq.d:/etc/dnsmasq.d'
+          - '/mediaServer/pihole/etc-pihole:/etc/pihole'
+          - '/mediaServer/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+    homeassistant:
+      image: linuxserver/homeassistant:latest
+      container_name: homeassistant
+      restart: unless-stopped
+      network_mode: host
+      environment:
+        PUID: $UID
+        PGID: $GID
+        TZ: Europe/Dublin
+      volumes:
+        - /mediaServer/homeassistant/config:/config
+      ports:
+        - "8123:8123"
