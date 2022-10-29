@@ -108,7 +108,7 @@ services:
       devices:
         - /dev/ttyUSB0:/dev/ttyUSB0
     nginx:
-      image: inuxserver/nginx
+      image: linuxserver/nginx
       container_name: nginx
       restart: unless-stopped
       volumes:
