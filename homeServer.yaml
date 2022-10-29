@@ -109,7 +109,8 @@ services:
         - /dev/ttyUSB0:/dev/ttyUSB0
     nginx:
       image: inuxserver/nginx
-      container_name: production_nginx
+      container_name: nginx
+      restart: unless-stopped
       volumes:
         - ./nginx:/config
       ports:
