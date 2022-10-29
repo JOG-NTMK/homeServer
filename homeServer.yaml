@@ -74,6 +74,7 @@ services:
         image: pihole/pihole:latest
         container_name: pihole
         restart: unless-stopped
+        network_mode: host
         # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
         ports:
           - "53:53/tcp"
@@ -101,3 +102,5 @@ services:
         - /mediaServer/homeassistant/config:/config
       ports:
         - "8123:8123"
+      devices:
+        - /dev/ttyUSB0:/dev/ttyUSB0
