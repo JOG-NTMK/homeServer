@@ -108,10 +108,10 @@ services:
       devices:
         - /dev/ttyUSB0:/dev/ttyUSB0
     nginx:
-      image: nginx:latest
+      image: inuxserver/nginx
       container_name: production_nginx
       volumes:
-        - ./nginx:/etc/nginx
+        - ./nginx:/config
       ports:
         - 80:80
         - 443:443
