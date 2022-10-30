@@ -111,8 +111,9 @@ services:
       image: linuxserver/nginx
       container_name: nginx
       restart: unless-stopped
+      network_mode: host
       volumes:
-        - ./nginx:/config
+        - ./nginx-config:/config
       ports:
         - 80:80
         - 443:443
