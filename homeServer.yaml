@@ -4,6 +4,13 @@ services:
         image: linuxserver/jellyfin
         container_name: jellyfin
         restart: unless-stopped
+        deploy:
+          resources:
+            reservations:
+              devices:
+                - driver: nvidia
+                  count: 1
+                  capabilities: [ gpu ]
         environment:
           TZ: Europe/Dublin
           PUID: $UID
@@ -107,13 +114,13 @@ services:
         - "8123:8123"
       devices:
         - /dev/ttyUSB0:/dev/ttyUSB0
-    nginx:
-      image: linuxserver/nginx
-      container_name: nginx
+    nginx-proxy:
+      image: 'jc21/nginx-proxy-manager:latest'
       restart: unless-stopped
-      network_mode: host
-      volumes:
-        - ./nginx-config:/config
       ports:
-        - 80:80
-        - 443:443
+        - '80:80'
+        - '81:81'
+        - '443:443'
+      volumes:
+        - /mediaServer/nginx-proxy/data:/data
+        - /mediaServer/nginx-proxy/letsencrypt:/etc/letsencrypt
