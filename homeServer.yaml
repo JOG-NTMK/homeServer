@@ -67,6 +67,18 @@ services:
             - /Media/jellyfin/media/Movies:/movies
         ports:
             - 7878:7878
+    ombi:
+      image: lscr.io/linuxserver/ombi:latest
+      container_name: ombi
+      restart: unless-stopped
+      environment:
+        TZ: Europe/Dublin
+        PUID: $UID
+        PGID: $GID
+      volumes:
+        - /mediaServer/ombi/config:/config
+      ports:
+        - 3579:3579
     watchtower:
         image: v2tec/watchtower
         container_name: watchtower
