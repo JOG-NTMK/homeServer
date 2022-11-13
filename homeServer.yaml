@@ -138,3 +138,16 @@ services:
       volumes:
         - /mediaServer/nginx-proxy/data:/data
         - /mediaServer/nginx-proxy/letsencrypt:/etc/letsencrypt
+    dashy:
+      image: lissy93/dashy
+      container_name: dashy
+      volumes:
+        - /mediaServer/dashy/config:/app/public/conf.yml
+      ports:
+        - "4000:8123"
+      environment:
+        NODE_ENV: production
+        PUID: $UID
+        PGID: $GID
+        TZ: Europe/Dublin
+      restart: unless-stopped
