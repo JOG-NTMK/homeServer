@@ -144,7 +144,7 @@ services:
       volumes:
         - /mediaServer/dashy/config:/app/public
       ports:
-        - "4000:8123"
+        - "4000:8456"
       environment:
         NODE_ENV: production
         PUID: $UID
