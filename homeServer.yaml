@@ -142,7 +142,7 @@ services:
       image: lissy93/dashy
       container_name: dashy
       volumes:
-        - /mediaServer/dashy/config:/app/public/conf.yml
+        - /mediaServer/dashy/config:/app/public
       ports:
         - "4000:8123"
       environment:
