@@ -1,84 +1,5 @@
 version: '2'
 services:
-    jellyfin:
-        image: linuxserver/jellyfin
-        container_name: jellyfin
-        restart: unless-stopped
-        deploy:
-          resources:
-            reservations:
-              devices:
-                - driver: nvidia
-                  count: 1
-                  capabilities: [ gpu ]
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-        networks:
-          - default
-        volumes:
-          - /mediaServer/jellyfin/config:/config
-          - /Media/jellyfin/media:/media
-        ports:
-          - 8096:8096
-    nzbget:
-        image: linuxserver/nzbget
-        container_name: nzbget
-        restart: unless-stopped
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-        volumes:
-            - /mediaServer/nzbget/config:/config
-            - /Media/nzbget/downloads:/downloads
-        ports:
-            - 6789:6789
-    sonarr:
-        image: linuxserver/sonarr
-        container_name: sonarr
-        restart: unless-stopped
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-        depends_on:
-            - nzbget
-        volumes:
-            - /mediaServer/sonarr/config:/config
-            - /Media/nzbget/downloads:/downloads
-            - /Media/jellyfin/media/Shows:/tv
-        ports:
-            - 8989:8989
-    radarr:
-        image: linuxserver/radarr
-        container_name: radarr
-        restart: unless-stopped
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-        depends_on:
-            - nzbget
-        volumes:
-            - /mediaServer/radarr/config:/config
-            - /Media/nzbget/downloads:/downloads
-            - /Media/jellyfin/media/Movies:/movies
-        ports:
-            - 7878:7878
-    ombi:
-      image: lscr.io/linuxserver/ombi:latest
-      container_name: ombi
-      restart: unless-stopped
-      environment:
-        TZ: Europe/Dublin
-        PUID: $UID
-        PGID: $GID
-      volumes:
-        - /mediaServer/ombi/config:/config
-      ports:
-        - 3579:3579
     watchtower:
         image: v2tec/watchtower
         container_name: watchtower
@@ -89,28 +10,6 @@ services:
           PGID: $GID
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
-    pihole:
-        image: pihole/pihole:latest
-        container_name: pihole
-        restart: unless-stopped
-        network_mode: host
-        # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-        ports:
-          - "53:53/tcp"
-          - "53:53/udp"
-          - "80:80/tcp"
-        environment:
-          TZ: Europe/Dublin
-          WEBPASSWORD: $PIPASSWORD
-          DNSMASQ_LISTENING: local
-          PIHOLE_DNS_: 1.1.1.1;1.1.0.0
-          WEB_PORT: 8017
-        labels:
-          - com.centurylinklabs.watchtower.enable = "false"
-        # Volumes store your data between container upgrades
-        volumes:
-          - '/mediaServer/pihole/etc-pihole:/etc/pihole'
-          - '/mediaServer/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
     homeassistant:
       image: linuxserver/homeassistant:latest
       container_name: homeassistant
@@ -126,31 +25,6 @@ services:
         - "8123:8123"
       devices:
         - /dev/ttyUSB0:/dev/ttyUSB0
-    nginx-proxy:
-      image: 'jc21/nginx-proxy-manager:latest'
-      container_name: nginx-proxy
-      restart: unless-stopped
-      network_mode: host
-      ports:
-        - '80:80'
-        - '81:81'
-        - '443:443'
-      volumes:
-        - /mediaServer/nginx-proxy/data:/data
-        - /mediaServer/nginx-proxy/letsencrypt:/etc/letsencrypt
-    dashy:
-      image: lissy93/dashy
-      container_name: dashy
-      volumes:
-        - /mediaServer/dashy/config/conf.yml:/app/public/conf.yml
-      ports:
-        - "8456:80"
-      environment:
-        NODE_ENV: production
-        PUID: $UID
-        PGID: $GID
-        TZ: Europe/Dublin
-      restart: unless-stopped
     mosquitto:
       image: eclipse-mosquitto:latest
       container_name: mosquitto
