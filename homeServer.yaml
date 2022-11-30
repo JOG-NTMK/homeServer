@@ -1,43 +1,65 @@
 version: '2'
 services:
-    watchtower:
-        image: v2tec/watchtower
-        container_name: watchtower
-        restart: unless-stopped
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
-    homeassistant:
-      image: linuxserver/homeassistant:latest
-      container_name: homeassistant
-      restart: unless-stopped
-      network_mode: host
-      environment:
-        PUID: $UID
-        PGID: $GID
-        TZ: Europe/Dublin
-      volumes:
-        - /mediaServer/homeassistant/config:/config
-      ports:
-        - "8123:8123"
-      devices:
-        - /dev/ttyUSB0:/dev/ttyUSB0
-    mosquitto:
-      image: eclipse-mosquitto:latest
-      container_name: mosquitto
-      restart: unless-stopped
-      network_mode: host
-      environment:
-        UID: $UID
-        GID: $GID
-        TZ: Europe/Dublin
-      volumes:
-        - /mediaServer/mosquitto/config/:/mosquitto/config/:ro
-        - /mediaServer/mosquitto/log/:/mosquitto/log/
-        - /mediaServer/mosquitto/data/:/mosquitto/data/
-      ports:
-        - 1883:1883
-        - 9001:9001
+  jellyfin:
+    image: linuxserver/jellyfin
+    container_name: jellyfin
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    environment:
+      TZ: Europe/Dublin
+      PUID: $UID
+      PGID: $GID
+    networks:
+      - default
+    volumes:
+      - /mediaServer/jellyfin/config:/config
+      - /Media/jellyfin/media:/media
+    ports:
+      - 8096:8096
+  watchtower:
+    image: v2tec/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      TZ: Europe/Dublin
+      PUID: $UID
+      PGID: $GID
+    volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+  homeassistant:
+    image: linuxserver/homeassistant:latest
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUID: $UID
+      PGID: $GID
+      TZ: Europe/Dublin
+    volumes:
+      - /mediaServer/homeassistant/config:/config
+    ports:
+      - "8123:8123"
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      UID: $UID
+      GID: $GID
+      TZ: Europe/Dublin
+    volumes:
+      - /mediaServer/mosquitto/config/:/mosquitto/config/:ro
+      - /mediaServer/mosquitto/log/:/mosquitto/log/
+      - /mediaServer/mosquitto/data/:/mosquitto/data/
+    ports:
+      - 1883:1883
+      - 9001:9001

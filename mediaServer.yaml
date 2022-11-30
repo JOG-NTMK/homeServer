@@ -1,27 +1,5 @@
 version: '2'
 services:
-  jellyfin:
-    image: linuxserver/jellyfin
-    container_name: jellyfin
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
-    environment:
-      TZ: Europe/Dublin
-      PUID: $UID
-      PGID: $GID
-    networks:
-      - default
-    volumes:
-      - /mediaServer/jellyfin/config:/config
-      - /Media/jellyfin/media:/media
-    ports:
-      - 8096:8096
   nzbget:
     image: linuxserver/nzbget
     container_name: nzbget
