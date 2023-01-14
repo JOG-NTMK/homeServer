@@ -83,10 +83,13 @@ services:
         image: v2tec/watchtower
         container_name: watchtower
         restart: unless-stopped
+        labels:
+          - com.centurylinklabs.watchtower.lifecycle.post-check="/update.sh"
         environment:
           TZ: Europe/Dublin
           PUID: $UID
           PGID: $GID
+          WATCHTOWER_MONITOR_ONLY: true
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     pihole:
