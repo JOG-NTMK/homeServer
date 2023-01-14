@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker compose -f homeServer.yaml up
+docker compose -f homeServer.yaml up -d
