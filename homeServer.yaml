@@ -45,10 +45,10 @@ services:
           PUID: $UID
           PGID: $GID
         depends_on:
-            - nzbget
+            - sabnzbd
         volumes:
             - /mediaServer/sonarr/config:/config
-            - /Media/nzbget/downloads:/downloads
+            - /Media/sabnzbd/downloads:/downloads
             - /Media/jellyfin/media/Shows:/tv
         ports:
             - 8989:8989
@@ -61,10 +61,10 @@ services:
           PUID: $UID
           PGID: $GID
         depends_on:
-            - nzbget
+            - sabnzbd
         volumes:
             - /mediaServer/radarr/config:/config
-            - /Media/nzbget/downloads:/downloads
+            - /Media/sabnzbd/downloads:/downloads
             - /Media/jellyfin/media/Movies:/movies
         ports:
             - 7878:7878
