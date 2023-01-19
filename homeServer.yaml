@@ -32,9 +32,9 @@ services:
       volumes:
         - /mediaServer/sabnzbd/config:/config
         - /Media/sabnzbd/downloads:/downloads
-        - /Media/sabnzbd/downloads:/incomplete-downloads
+        - /Media/sabnzbd/incomplete:/incomplete-downloads
       ports:
-        - 6789:6789
+        - 6789:8080
       restart: unless-stopped
     sonarr:
         image: linuxserver/sonarr
