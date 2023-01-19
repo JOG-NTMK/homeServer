@@ -22,19 +22,20 @@ services:
           - /Media/jellyfin/media:/media
         ports:
           - 8096:8096
-    nzbget:
-        image: linuxserver/nzbget
-        container_name: nzbget
-        restart: unless-stopped
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-        volumes:
-            - /mediaServer/nzbget/config:/config
-            - /Media/nzbget/downloads:/downloads
-        ports:
-            - 6789:6789
+    sabnzbd:
+      image: lscr.io/linuxserver/sabnzbd:latest
+      container_name: sabnzbd
+      environment:
+        TZ: Europe/Dublin
+        PUID: $UID
+        PGID: $GID
+      volumes:
+        - /mediaServer/sabnzbd/config:/config
+        - /Media/sabnzbd/downloads:/downloads
+        - /Media/sabnzbd/downloads:/incomplete-downloads
+      ports:
+        - 6789:6789
+      restart: unless-stopped
     sonarr:
         image: linuxserver/sonarr
         container_name: sonarr
