@@ -171,9 +171,9 @@ services:
       ports:
         - 1883:1883
         - 9001:9001
-    icantbelieveitsnotvaletudo:
-      build: https://github.com/Hypfer/Icantbelieveitsnotvaletudo
-      container_name: "ICantBelieveItsNotValetudo"
+    icbinv:
+      build: https://github.com/Hypfer/ICantBelieveItsNotValetudo.git
+      container_name: "icbinv"
       restart: always
       volumes:
-        - /mediaServer//ICantBelieveItsNotValetudo/config.json:/app/config.json
+        - /mediaServer/ICantBelieveItsNotValetudo/config.json:/app/config.json
