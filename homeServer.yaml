@@ -80,19 +80,6 @@ services:
         - /mediaServer/ombi/config:/config
       ports:
         - 3579:3579
-    watchtower:
-        image: v2tec/watchtower
-        container_name: watchtower
-        restart: unless-stopped
-        labels:
-          - com.centurylinklabs.watchtower.lifecycle.post-check="/update.sh"
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-          WATCHTOWER_MONITOR_ONLY: true
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
     pihole:
         image: pihole/pihole:latest
         container_name: pihole
