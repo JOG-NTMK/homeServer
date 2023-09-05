@@ -54,6 +54,7 @@ services:
     container_name: immich_web
     image: ghcr.io/immich-app/immich-web:${IMMICH_VERSION:-release}
     environment:
+      IMMICH_SERVER_URL: ${IMMICH_SERVER_URL}
       PUID: $UID
       PGID: $GID
     env_file:
