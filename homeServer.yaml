@@ -80,19 +80,6 @@ services:
         - /mediaServer/ombi/config:/config
       ports:
         - 3579:3579
-    watchtower:
-        image: v2tec/watchtower
-        container_name: watchtower
-        restart: unless-stopped
-        labels:
-          - com.centurylinklabs.watchtower.lifecycle.post-check="/update.sh"
-        environment:
-          TZ: Europe/Dublin
-          PUID: $UID
-          PGID: $GID
-          WATCHTOWER_MONITOR_ONLY: true
-        volumes:
-            - /var/run/docker.sock:/var/run/docker.sock
     pihole:
         image: pihole/pihole:latest
         container_name: pihole
@@ -171,3 +158,9 @@ services:
       ports:
         - 1883:1883
         - 9001:9001
+    icbinv:
+      build: https://github.com/Hypfer/ICantBelieveItsNotValetudo.git
+      container_name: "icbinv"
+      restart: always
+      volumes:
+        - /mediaServer/ICantBelieveItsNotValetudo/config.json:/app/config.json
