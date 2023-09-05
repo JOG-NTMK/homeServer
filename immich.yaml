@@ -103,8 +103,8 @@ services:
       - PUID=$UID
       - PGID=$GID
       # Make sure these values get passed through from the env file
-      - IMMICH_SERVER_URL
-      - IMMICH_WEB_URL
+      - ${IMMICH_SERVER_URL}
+      - ${IMMICH_WEB_URL}
     ports:
       - 2283:8080
     depends_on:
