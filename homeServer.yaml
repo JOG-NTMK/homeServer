@@ -31,8 +31,8 @@ services:
         PGID: $GID
       volumes:
         - /mediaServer/sabnzbd/config:/config
-        - /Media/sabnzbd/downloads:/downloads
-        - /Media/sabnzbd/incomplete:/incomplete-downloads
+        - /mediaServer/sabnzbd/downloads:/downloads
+        - /mediaServer/sabnzbd/incomplete:/incomplete-downloads
       ports:
         - 6789:8080
       restart: unless-stopped
