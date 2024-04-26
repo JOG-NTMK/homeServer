@@ -166,9 +166,9 @@ services:
       image: lissy93/dashy
       container_name: dashy
       volumes:
-        - /mediaServer/dashy/config/conf.yml:/app/public/conf.yml
+        - /mediaServer/dashy/config/conf.yml:/app/user-data/conf.yml
       ports:
-        - "8456:80"
+        - "8456:8080"
       environment:
         NODE_ENV: production
         PUID: $UID
