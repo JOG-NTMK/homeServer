@@ -10,7 +10,7 @@ services:
               devices:
                 - driver: nvidia
                   count: 1
-                  capabilities: [ all ]
+                  capabilities: [ gpu ]
         environment:
           TZ: Europe/Dublin
           PUID: $UID
@@ -206,6 +206,13 @@ services:
       container_name: ollama
       tty: true
       restart: unless-stopped
+      deploy:
+        resources:
+          reservations:
+            devices:
+              - driver: nvidia
+                count: 1
+                capabilities: [ gpu ]
     ollama-webui:
       image: ghcr.io/open-webui/open-webui:main
       container_name: ollama-webui
