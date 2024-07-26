@@ -248,7 +248,7 @@ services:
       volumes:
         - ./postgresql:/var/lib/postgresql/data
       env_file:
-        - ./.env
+        - ./.env.tandoor
     web_recipes:
       restart: always
       image: vabene1111/recipes
