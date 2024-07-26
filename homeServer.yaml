@@ -275,6 +275,6 @@ services:
         - nginx_config:/etc/nginx/conf.d:ro
         - staticfiles:/static:ro
         - /mediaServer/tandoor/mediafiles:/media:ro
-    volumes:
-      nginx_config:
-      staticfiles:
+volumes:
+  nginx_config:
+  staticfiles:
