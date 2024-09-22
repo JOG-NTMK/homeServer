@@ -67,6 +67,41 @@ services:
             - /Media/jellyfin/media/Movies:/movies
         ports:
             - 7878:7878
+    tdarr:
+        container_name: tdarr
+        image: ghcr.io/haveagitgat/tdarr:latest
+        restart: unless-stopped
+        ports:
+            - 8265:8265 # webUI port
+            - 8266:8266 # server port
+        environment:
+            - PUID=$UID
+            - PGID=$GID
+            - TZ=Europe/Dublin
+            - serverIP=0.0.0.0
+            - serverPort=8266
+            - webUIPort=8265
+            - internalNode=true
+            - inContainer=true
+            - ffmpegVersion=7
+            - nodeName=MyInternalNode
+            - NVIDIA_DRIVER_CAPABILITIES=all
+            - NVIDIA_VISIBLE_DEVICES=all
+        volumes:
+            - /transcode_cache:/temp
+            - /mediaServer/tdarr/config:/app/configs
+            - /mediaServer/tdarr/server:/app/server
+            - /mediaServer/tdarr/logs:/app/logs
+            - /Media/jellyfin/media/Movies:/movies
+        devices:
+          - /dev/dri:/dev/dri
+        deploy:
+          resources:
+            reservations:
+              devices:
+                - driver: nvidia
+                  count: all
+                  capabilities: [ gpu ]
     readarr:
       image: lscr.io/linuxserver/readarr:develop
       container_name: readarr
