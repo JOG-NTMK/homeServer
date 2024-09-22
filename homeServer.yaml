@@ -93,6 +93,7 @@ services:
             - /mediaServer/tdarr/server:/app/server
             - /mediaServer/tdarr/logs:/app/logs
             - /Media/jellyfin/media/Movies:/movies
+            - /Media/jellyfin/media/Shows:/tv
         devices:
           - /dev/dri:/dev/dri
         deploy:
