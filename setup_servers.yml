@@ -23,37 +23,21 @@
           - lsb-release
         state: present
 
-    - name: Add Docker GPG key
-      command: >
-        curl -fsSL https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
-        | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-      args:
-        creates: /usr/share/keyrings/docker-archive-keyring.gpg
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+        state: present
 
-    - name: Add Docker repository
-      copy:
-        dest: /etc/apt/sources.list.d/docker.list
-        content: "deb [arch=armhf signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable\n"
-      when: ansible_architecture == "armv7l"  # Adjust for Raspberry Pi
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+        state: present
 
-    - name: Add Docker repository for PC
-      copy:
-        dest: /etc/apt/sources.list.d/docker.list
-        content: "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable\n"
-      when: ansible_architecture == "x86_64"
-
-    - name: Update package index after adding Docker repository
+    - name: Update apt and install docker-ce
       apt:
-        update_cache: yes
-
-    - name: Install Docker and Docker Compose
-      apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-compose-plugin
+        name: docker-ce
         state: latest
+        update_cache: true
 
     - name: Ensure Docker service is running
       service:
