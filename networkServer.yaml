@@ -1,0 +1,46 @@
+services:
+  nginx-proxy:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - /mediaServer/nginx-proxy/data:/data
+      - /mediaServer/nginx-proxy/letsencrypt:/etc/letsencrypt
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    network_mode: host
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+    environment:
+      TZ: Europe/Dublin
+      WEBPASSWORD: $PIPASSWORD
+      DNSMASQ_LISTENING: local
+      PIHOLE_DNS_: 1.1.1.1;1.1.0.0
+      WEB_PORT: 8017
+    # Volumes store your data between container upgrades
+    volumes:
+      - '/mediaServer/pihole/etc-pihole:/etc/pihole'
+      - '/mediaServer/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+  dashy:
+    image: lissy93/dashy
+    container_name: dashy
+    volumes:
+      - /mediaServer/dashy/config/conf.yml:/app/user-data/conf.yml
+    ports:
+      - "8456:8080"
+    environment:
+      NODE_ENV: production
+      PUID: $UID
+      PGID: $GID
+      TZ: Europe/Dublin
+    restart: unless-stopped
