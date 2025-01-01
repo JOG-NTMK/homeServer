@@ -1,0 +1,38 @@
+services:
+  homeassistant:
+    image: linuxserver/homeassistant:latest
+    container_name: homeassistant
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUID: $UID
+      PGID: $GID
+      TZ: Europe/Dublin
+    volumes:
+      - /mediaServer/homeassistant/config:/config
+    ports:
+      - "8123:8123"
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      UID: $UID
+      GID: $GID
+      TZ: Europe/Dublin
+    volumes:
+      - /mediaServer/mosquitto/config/:/mosquitto/config/:ro
+      - /mediaServer/mosquitto/log/:/mosquitto/log/
+      - /mediaServer/mosquitto/data/:/mosquitto/data/
+    ports:
+      - 1883:1883
+      - 9001:9001
+  icbinv:
+    build: https://github.com/Hypfer/ICantBelieveItsNotValetudo.git
+    container_name: "icbinv"
+    restart: always
+    volumes:
+      - /mediaServer/ICantBelieveItsNotValetudo/config.json:/app/config.json
