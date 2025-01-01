@@ -115,43 +115,6 @@ services:
         - /mediaServer/ombi/config:/config
       ports:
         - 3579:3579
-    pihole:
-        image: pihole/pihole:latest
-        container_name: pihole
-        restart: unless-stopped
-        network_mode: host
-        # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
-        ports:
-          - "53:53/tcp"
-          - "53:53/udp"
-          - "80:80/tcp"
-        environment:
-          TZ: Europe/Dublin
-          WEBPASSWORD: $PIPASSWORD
-          DNSMASQ_LISTENING: local
-          PIHOLE_DNS_: 1.1.1.1;1.1.0.0
-          WEB_PORT: 8017
-        labels:
-          - com.centurylinklabs.watchtower.enable = "false"
-        # Volumes store your data between container upgrades
-        volumes:
-          - '/mediaServer/pihole/etc-pihole:/etc/pihole'
-          - '/mediaServer/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
-    homeassistant:
-      image: linuxserver/homeassistant:latest
-      container_name: homeassistant
-      restart: unless-stopped
-      network_mode: host
-      environment:
-        PUID: $UID
-        PGID: $GID
-        TZ: Europe/Dublin
-      volumes:
-        - /mediaServer/homeassistant/config:/config
-      ports:
-        - "8123:8123"
-      devices:
-        - /dev/ttyUSB0:/dev/ttyUSB0
     faster-whisper:
       image: lscr.io/linuxserver/faster-whisper:latest
       container_name: faster-whisper
@@ -185,52 +148,56 @@ services:
       ports:
         - 10200:10200
       restart: unless-stopped
-    nginx-proxy:
-      image: 'jc21/nginx-proxy-manager:latest'
-      container_name: nginx-proxy
-      restart: unless-stopped
-      network_mode: host
-      ports:
-        - '80:80'
-        - '81:81'
-        - '443:443'
-      volumes:
-        - /mediaServer/nginx-proxy/data:/data
-        - /mediaServer/nginx-proxy/letsencrypt:/etc/letsencrypt
-    dashy:
-      image: lissy93/dashy
-      container_name: dashy
-      volumes:
-        - /mediaServer/dashy/config/conf.yml:/app/user-data/conf.yml
-      ports:
-        - "8456:8080"
+
+    immich-server:
+      container_name: immich_server
+      image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
       environment:
-        NODE_ENV: production
         PUID: $UID
         PGID: $GID
-        TZ: Europe/Dublin
-      restart: unless-stopped
-    mosquitto:
-      image: eclipse-mosquitto:latest
-      container_name: mosquitto
-      restart: unless-stopped
-      network_mode: host
-      environment:
-        UID: $UID
-        GID: $GID
-        TZ: Europe/Dublin
       volumes:
-        - /mediaServer/mosquitto/config/:/mosquitto/config/:ro
-        - /mediaServer/mosquitto/log/:/mosquitto/log/
-        - /mediaServer/mosquitto/data/:/mosquitto/data/
+        - ${UPLOAD_LOCATION}:/usr/src/app/upload
+      env_file:
+        - .env
       ports:
-        - 1883:1883
-        - 9001:9001
-    icbinv:
-      build: https://github.com/Hypfer/ICantBelieveItsNotValetudo.git
-      container_name: "icbinv"
+        - 2283:2283
+      depends_on:
+        - redis
+        - database
       restart: always
+
+    immich-machine-learning:
+      container_name: immich-machine-learning
+      image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+      environment:
+        PUID: $UID
+        PGID: $GID
       volumes:
-        - /mediaServer/ICantBelieveItsNotValetudo/config.json:/app/config.json
-volumes:
-  nginx_config:
+        - model-cache:/cache
+      env_file:
+        - .env
+      restart: always
+
+    redis:
+      container_name: immich_redis
+      image: redis:6.2-alpine@sha256:70a7a5b641117670beae0d80658430853896b5ef269ccf00d1827427e3263fa3
+      restart: always
+
+    database:
+      container_name: immich_postgres
+      image: tensorchord/pgvecto-rs:pg14-v0.2.0
+      env_file:
+        - .env
+      environment:
+        TZ: Europe/Dublin
+        PUID: $UID
+        PGID: $GID
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+        POSTGRES_USER: ${DB_USERNAME}
+        POSTGRES_DB: ${DB_DATABASE_NAME}
+      volumes:
+        - pgdata:/var/lib/postgresql/data
+      restart: always
+    volumes:
+      pgdata:
+      model-cache:
