@@ -9,7 +9,7 @@ services:
       PGID: $GID
       TZ: Europe/Dublin
     volumes:
-      - /mediaServer/homeassistant/config:/config
+      - /automationServer/homeassistant/config:/config
     ports:
       - "8123:8123"
     devices:
@@ -24,9 +24,9 @@ services:
       GID: $GID
       TZ: Europe/Dublin
     volumes:
-      - /mediaServer/mosquitto/config/:/mosquitto/config/:ro
-      - /mediaServer/mosquitto/log/:/mosquitto/log/
-      - /mediaServer/mosquitto/data/:/mosquitto/data/
+      - /automationServer/mosquitto/config/:/mosquitto/config/:ro
+      - /automationServer/mosquitto/log/:/mosquitto/log/
+      - /automationServer/mosquitto/data/:/mosquitto/data/
     ports:
       - 1883:1883
       - 9001:9001
@@ -35,4 +35,4 @@ services:
     container_name: "icbinv"
     restart: always
     volumes:
-      - /mediaServer/ICantBelieveItsNotValetudo/config.json:/app/config.json
+      - /automationServer/ICantBelieveItsNotValetudo/config.json:/app/config.json
