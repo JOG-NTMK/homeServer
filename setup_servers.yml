@@ -4,69 +4,43 @@
   become: yes
 
   vars:
-    docker_compose_dir: "{{ playbook_dir }}/files/{{ inventory_hostname }}"
+    docker_file: "{{ docker_compose_file }}"
+    docker_users:
+      - jason
+
+  roles:
+    - geerlingguy.pip
+    - geerlingguy.docker
 
   tasks:
     - name: Update and upgrade the system
       apt:
         update_cache: yes
-        upgrade: full
+        upgrade: yes
         autoremove: true
-
-    - name: Install required packages
-      apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
-        state: present
-
-    - name: Add Docker GPG apt Key
-      apt_key:
-        url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
-        state: present
-
-    - name: Add Docker Repository
-      apt_repository:
-        repo: deb https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
-        state: present
-
-    - name: Update apt and install docker-ce
-      apt:
-        name: docker-ce
-        state: latest
-        update_cache: true
-
-    - name: Ensure Docker service is running
-      service:
-        name: docker
-        state: started
-        enabled: yes
 
     - name: Create application directory
       file:
         path: /opt/app
         state: directory
-        owner: root
-        group: root
+        owner: jason
+        group: jason
         mode: '0755'
 
     - name: Copy Docker Compose file to server
       copy:
-        src: "{{ docker_compose_dir }}/docker-compose.yml"
+        src: "{{ docker_file }}"
         dest: /opt/app/docker-compose.yml
-        owner: root
-        group: root
+        owner: jason
+        group: jason
         mode: '0644'
 
     - name: Copy .env file to server
       copy:
-        src: "{{ docker_compose_dir }}/.env"
+        src: "example.env"
         dest: /opt/app/.env
-        owner: root
-        group: root
+        owner: jason
+        group: jason
         mode: '0644'
 
     - name: Start Docker Compose services

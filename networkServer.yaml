@@ -9,8 +9,8 @@ services:
       - '81:81'
       - '443:443'
     volumes:
-      - /mediaServer/nginx-proxy/data:/data
-      - /mediaServer/nginx-proxy/letsencrypt:/etc/letsencrypt
+      - /networkServer/nginx-proxy/data:/data
+      - /networkServer/nginx-proxy/letsencrypt:/etc/letsencrypt
   pihole:
     image: pihole/pihole:latest
     container_name: pihole
@@ -29,13 +29,13 @@ services:
       WEB_PORT: 8017
     # Volumes store your data between container upgrades
     volumes:
-      - '/mediaServer/pihole/etc-pihole:/etc/pihole'
-      - '/mediaServer/pihole/etc-dnsmasq.d:/etc/dnsmasq.d'
+      - /networkServer/pihole/etc-pihole:/etc/pihole
+      - /networkServer/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
   dashy:
     image: lissy93/dashy
     container_name: dashy
     volumes:
-      - /mediaServer/dashy/config/conf.yml:/app/user-data/conf.yml
+      - /networkServer/dashy/config:/app/user-data
     ports:
       - "8456:8080"
     environment:
