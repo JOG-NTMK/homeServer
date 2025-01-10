@@ -67,42 +67,6 @@ services:
             - /Media/jellyfin/media/Movies:/movies
         ports:
             - 7878:7878
-    tdarr:
-        container_name: tdarr
-        image: ghcr.io/haveagitgat/tdarr:latest
-        restart: unless-stopped
-        ports:
-            - 8265:8265 # webUI port
-            - 8266:8266 # server port
-        environment:
-            - PUID=$UID
-            - PGID=$GID
-            - TZ=Europe/Dublin
-            - serverIP=0.0.0.0
-            - serverPort=8266
-            - webUIPort=8265
-            - internalNode=true
-            - inContainer=true
-            - ffmpegVersion=7
-            - nodeName=MyInternalNode
-            - NVIDIA_DRIVER_CAPABILITIES=all
-            - NVIDIA_VISIBLE_DEVICES=all
-        volumes:
-            - /transcode_cache:/temp
-            - /mediaServer/tdarr/config:/app/configs
-            - /mediaServer/tdarr/server:/app/server
-            - /mediaServer/tdarr/logs:/app/logs
-            - /Media/jellyfin/media/Movies:/movies
-            - /Media/jellyfin/media/Shows:/tv
-        devices:
-          - /dev/dri:/dev/dri
-        deploy:
-          resources:
-            reservations:
-              devices:
-                - driver: nvidia
-                  count: all
-                  capabilities: [ gpu ]
     ombi:
       image: lscr.io/linuxserver/ombi:latest
       container_name: ombi
@@ -115,39 +79,6 @@ services:
         - /mediaServer/ombi/config:/config
       ports:
         - 3579:3579
-    faster-whisper:
-      image: lscr.io/linuxserver/faster-whisper:latest
-      container_name: faster-whisper
-      environment:
-        - PUID=$UID
-        - PGID=$GID
-        - TZ=Europe/Dublin
-        - WHISPER_MODEL=tiny-int8
-        - WHISPER_BEAM=1 #optional
-        - WHISPER_LANG=en #optional
-      volumes:
-        - /mediaServer/faster-whisper/config:/config
-      ports:
-        - 10300:10300
-      restart: unless-stopped
-    piper:
-      image: lscr.io/linuxserver/piper:latest
-      container_name: piper
-      environment:
-        - PUID=$UID
-        - PGID=$GID
-        - TZ=Europe/Dublin
-        - PIPER_VOICE=en_US-lessac-medium
-        - PIPER_LENGTH=1.0 #optional
-        - PIPER_NOISE=0.667 #optional
-        - PIPER_NOISEW=0.333 #optional
-        - PIPER_SPEAKER=0 #optional
-        - PIPER_PROCS=1 #optional
-      volumes:
-        - /mediaServer/piper/config:/config
-      ports:
-        - 10200:10200
-      restart: unless-stopped
 
     immich-server:
       container_name: immich_server
