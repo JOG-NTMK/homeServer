@@ -7,43 +7,11 @@
     docker_file: "{{ docker_compose_file }}"
     docker_users:
       - jason
+    security_ssh_password_authentication: "yes"
+    prometheus_node_exporter_version: 1.8.2
 
   roles:
     - geerlingguy.pip
     - geerlingguy.docker
-
-  tasks:
-    - name: Update and upgrade the system
-      apt:
-        update_cache: yes
-        upgrade: yes
-        autoremove: true
-
-    - name: Create application directory
-      file:
-        path: /opt/app
-        state: directory
-        owner: jason
-        group: jason
-        mode: '0755'
-
-    - name: Copy Docker Compose file to server
-      copy:
-        src: "{{ docker_file }}"
-        dest: /opt/app/docker-compose.yml
-        owner: jason
-        group: jason
-        mode: '0644'
-
-    - name: Copy .env file to server
-      copy:
-        src: "example.env"
-        dest: /opt/app/.env
-        owner: jason
-        group: jason
-        mode: '0644'
-
-    - name: Start Docker Compose services
-      command:
-        cmd: "docker compose up -d"
-        chdir: /opt/app
+    - geerlingguy.security
+    - UnderGreen.prometheus-node-exporter
