@@ -1,0 +1,17 @@
+---
+- name: Setup servers with Docker, Docker Compose, and application
+  hosts: all
+  become: yes
+
+  vars:
+    docker_file: "{{ docker_compose_file }}"
+    docker_users:
+      - jason
+    security_ssh_password_authentication: "yes"
+    prometheus_node_exporter_version: 1.8.2
+
+  roles:
+    - geerlingguy.pip
+    - geerlingguy.docker
+    - geerlingguy.security
+    - UnderGreen.prometheus-node-exporter

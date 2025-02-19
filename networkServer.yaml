@@ -1,0 +1,50 @@
+services:
+  nginx-proxy:
+    image: 'jc21/nginx-proxy-manager:latest'
+    container_name: nginx-proxy
+    restart: unless-stopped
+    network_mode: host
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - /networkServer/nginx-proxy/data:/data
+      - /networkServer/nginx-proxy/letsencrypt:/etc/letsencrypt
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8017:8080/tcp"
+      - "8043:443/tcp"
+    environment:
+      TZ: Europe/Dublin
+      FTLCONF_webserver_api_password: $PIPASSWORD
+      FTLCONF_dns_listeningMode: 'all'
+    labels:
+      com.centurylinklabs.watchtower.enable: "false" # Exclude pihole from Watchtower updates
+    # Volumes store your data between container upgrades
+    volumes:
+      - /networkServer/pihole/etc-pihole:/etc/pihole
+      - /networkServer/pihole/etc-dnsmasq.d:/etc/dnsmasq.d
+  dashy:
+    image: lissy93/dashy
+    container_name: dashy
+    volumes:
+      - /networkServer/dashy/config:/app/user-data
+    ports:
+      - "8456:8080"
+    environment:
+      NODE_ENV: production
+      PUID: $UID
+      PGID: $GID
+      TZ: Europe/Dublin
+    restart: unless-stopped
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
