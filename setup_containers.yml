@@ -24,18 +24,18 @@
         group: jason
         mode: '0644'
 
-    - name: ensures /monitoringServer/prometheus dir exists
-      file:
-        path: "/monitoringServer/prometheus"
-        state: directory
-
-    - name: Copy .env file to server
-      copy:
-        src: "prometheus.yml"
-        dest: /monitoringServer/prometheus/prometheus.yml
-        owner: jason
-        group: jason
-        mode: '0644'
+#    - name: ensures /monitoringServer/prometheus dir exists
+#      file:
+#        path: "/monitoringServer/prometheus"
+#        state: directory
+#
+#    - name: Copy .env file to server
+#      copy:
+#        src: "prometheus.yml"
+#        dest: /monitoringServer/prometheus/prometheus.yml
+#        owner: jason
+#        group: jason
+#        mode: '0644'
 
     - name: Start Docker Compose services
       command:
