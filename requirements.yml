@@ -1,0 +1,5 @@
+- name: geerlingguy.pip
+- name: geerlingguy.docker
+- name: geerlingguy.security
+- name: UnderGreen.prometheus-node-exporter
+  version: v1.5.1
