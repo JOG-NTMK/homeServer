@@ -1,0 +1,74 @@
+---
+- name: Update all Raspberry Pi servers
+  hosts: networkServer,automationServer,monitoringServer
+  become: yes
+  
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+        autoremove: yes
+        autoclean: yes
+      register: upgrade_result
+      
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+      
+    - name: Display upgrade results
+      debug:
+        msg: "{{ upgrade_result.stdout_lines[-20:] }}"
+      when: upgrade_result.stdout_lines is defined
+      
+    - name: Update Docker images with docker compose pull
+      command:
+        cmd: "docker compose pull"
+        chdir: /opt/app
+      register: docker_pull
+      ignore_errors: yes
+      
+    - name: Recreate containers with new images
+      command:
+        cmd: "docker compose up -d"
+        chdir: /opt/app
+      register: docker_up
+      when: docker_pull is succeeded
+      
+    - name: Clean up old Docker images
+      command: docker image prune -af
+      register: docker_prune
+      
+    - name: Display Docker cleanup results
+      debug:
+        msg: "{{ docker_prune.stdout }}"
+      
+    - name: Reboot if required
+      reboot:
+        msg: "Reboot initiated by Ansible for system updates"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+        test_command: uptime
+      when: reboot_required.stat.exists
+      
+    - name: Wait for server to come back online
+      wait_for_connection:
+        delay: 30
+        timeout: 300
+      when: reboot_required.stat.exists
+      
+    - name: Verify Docker services are running
+      command: docker ps
+      register: docker_status
+      changed_when: false
+      
+    - name: Display running containers
+      debug:
+        msg: "{{ docker_status.stdout_lines }}"

@@ -1,22 +1,28 @@
+networks:
+  media_network:
+    driver: bridge
 services:
   jellyfin:
     image: linuxserver/jellyfin
     container_name: jellyfin
-    restart: unless-stopped
     deploy:
       resources:
         reservations:
           devices:
-            - driver: nvidia
+            - capabilities:
+                - gpu
               count: 1
-              capabilities: [ gpu ]
+              driver: nvidia
     environment:
       TZ: Europe/Dublin
+    networks:
+      - media_network
+    ports:
+      - '8096:8096'
+    restart: unless-stopped
     volumes:
       - ${DATA_LOCATION}/jellyfin/config:/config
       - ${DATA_LOCATION}/jellyfin/media:/media
-    ports:
-      - "8096:8096"
   radarr:
     container_name: radarr
     depends_on:
@@ -24,6 +30,8 @@ services:
     environment:
       TZ: Europe/Dublin
     image: linuxserver/radarr
+    networks:
+      - media_network
     ports:
       - '7878:7878'
     restart: unless-stopped
@@ -36,6 +44,8 @@ services:
     environment:
       TZ: Europe/Dublin
     image: lscr.io/linuxserver/sabnzbd:latest
+    networks:
+      - media_network
     ports:
       - '6789:8080'
     restart: unless-stopped
@@ -50,6 +60,8 @@ services:
     environment:
       TZ: Europe/Dublin
     image: linuxserver/sonarr
+    networks:
+      - media_network
     ports:
       - '8989:8989'
     restart: unless-stopped
@@ -58,59 +70,63 @@ services:
       - ${DATA_LOCATION}/sabnzbd/downloads:/downloads
       - ${DATA_LOCATION}/jellyfin/media/Shows:/tv
   ombi:
-    image: lscr.io/linuxserver/ombi:latest
     container_name: ombi
-    restart: unless-stopped
     environment:
       TZ: Europe/Dublin
+    image: lscr.io/linuxserver/ombi:latest
+    networks:
+      - media_network
+    ports:
+      - '3579:3579'
+    restart: unless-stopped
     volumes:
       - ${DATA_LOCATION}/ombi/config:/config
-    ports:
-      - "3579:3579"
-
   immich-server:
     container_name: immich_server
-    image: ghcr.io/immich-app/immich-server:release
-    volumes:
-      - ${DATA_LOCATION}/immich:/usr/src/app/upload
-    environment:
-      TZ: Europe/Dublin
-      UPLOAD_LOCATION: ${DATA_LOCATION}/immich/
-    env_file:
-      - .env
-    ports:
-      - "2283:2283"
     depends_on:
       - redis
       - database
-    restart: always
-
+    environment:
+      DB_DATABASE_NAME: immich
+      DB_HOSTNAME: immich_postgres
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USERNAME: ${DB_USERNAME}
+      TZ: Europe/Dublin
+      UPLOAD_LOCATION: ${DATA_LOCATION}/immich/
+    image: ghcr.io/immich-app/immich-server:release
+    networks:
+      - media_network
+    ports:
+      - '2283:2283'
+    restart: unless-stopped
+    volumes:
+      - ${DATA_LOCATION}/immich:/usr/src/app/upload
   immich-machine-learning:
     container_name: immich-machine-learning
     image: ghcr.io/immich-app/immich-machine-learning:release
+    networks:
+      - media_network
+    restart: unless-stopped
     volumes:
       - model-cache:/cache
-    env_file:
-      - .env
-    restart: always
-
   redis:
     container_name: immich_redis
-    image: redis:6.2-alpine@sha256:70a7a5b641117670beae0d80658430853896b5ef269ccf00d1827427e3263fa3
-    restart: always
-
+    image: redis:6.2-alpine
+    networks:
+      - media_network
+    restart: unless-stopped
   database:
     container_name: immich_postgres
-    image: tensorchord/pgvecto-rs:pg14-v0.2.0
-    env_file:
-      - .env
     environment:
-      TZ: Europe/Dublin
+      POSTGRES_DB: ${DB_DATABASE_NAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_DB: ${DB_DATABASE_NAME}
+      TZ: Europe/Dublin
+    image: tensorchord/pgvecto-rs:pg14-v0.2.0
+    networks:
+      - media_network
+    restart: unless-stopped
     volumes:
       - ${DATA_LOCATION}/immich/pg_database:/var/lib/postgresql/data
-    restart: always
 volumes:
-  model-cache:
+  model-cache: Null

@@ -1,0 +1,178 @@
+---
+- name: Update mainServer using TrueNAS API
+  hosts: localhost
+  gather_facts: no
+
+  vars_files:
+    - vars/truenas.yml
+  vars:
+    truenas_api_url: "https://{{ truenas_host }}/api/v2.0"
+    app_name: "mainserver"
+    env_file: "mainServer.env"
+
+  tasks:
+    - name: Validate API key is set
+      fail:
+        msg: "TRUENAS_API_KEY environment variable must be set"
+      when: truenas_api_key == ""
+      
+    - name: Get current app status
+      uri:
+        url: "{{ truenas_api_url }}/app"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+      register: apps_list
+      
+    - name: Check if mainServer exists as TrueNAS app
+      set_fact:
+        app_exists: "{{ apps_list.json | selectattr('name', 'equalto', app_name) | list | length > 0 }}"
+        
+    - name: Display app status
+      debug:
+        msg: |
+          App '{{ app_name }}' exists: {{ app_exists }}
+          Available apps: {{ apps_list.json | map(attribute='name') | list }}
+          {% if not app_exists %}
+          Note: App doesn't exist as TrueNAS app. You may need to deploy it first with:
+          ansible-playbook -i inventory.ini deploy_truenas_custom_app.yml
+          {% endif %}
+        
+    - name: Update using TrueNAS Apps API
+      block:
+        - name: Stop the application
+          uri:
+            url: "{{ truenas_api_url }}/app/id/{{ app_name }}/stop"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ truenas_api_key }}"
+            validate_certs: no
+            status_code: [200, 404]
+          register: stop_result
+          ignore_errors: yes
+
+        - name: Wait for app to stop
+          pause:
+            seconds: 10
+            
+        - name: Update container images
+          uri:
+            url: "{{ truenas_api_url }}/app/id/{{ app_name }}/update"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ truenas_api_key }}"
+              Content-Type: "application/json"
+            body_format: json
+            body:
+              update_container_images: true
+            validate_certs: no
+            status_code: [200, 404, 422]
+          register: update_result
+          ignore_errors: yes
+          
+        - name: Alternative - Pull images directly
+          uri:
+            url: "{{ truenas_api_url }}/app/id/{{ app_name }}/pull_images"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ truenas_api_key }}"
+            validate_certs: no
+            status_code: [200, 404]
+          when: update_result.status == 404
+          register: pull_result
+          ignore_errors: yes
+          
+        - name: Start the application
+          uri:
+            url: "{{ truenas_api_url }}/app/id/{{ app_name }}/start"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ truenas_api_key }}"
+            validate_certs: no
+            status_code: [200, 404]
+          register: start_result
+          ignore_errors: yes
+          
+        - name: Display update results
+          debug:
+            msg: |
+              Update attempt completed:
+              - Stop: {{ 'Success' if stop_result.status == 200 else 'Not needed/Failed' }}
+              - Update: {{ 'Success' if update_result.status == 200 else 'Failed - app may not exist as TrueNAS app' }}
+              - Start: {{ 'Success' if start_result.status == 200 else 'Not needed/Failed' }}
+              
+              If all failed, the app doesn't exist. Deploy it first with:
+              ansible-playbook -i inventory.ini deploy_truenas_custom_app.yml
+      when: app_exists
+      
+    - name: Update using Docker via SSH API
+      block:
+        - name: Execute docker compose pull via API
+          uri:
+            url: "{{ truenas_api_url }}/filesystem/exec"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ truenas_api_key }}"
+              Content-Type: "application/json"
+            body_format: json
+            body:
+              command: "cd /mnt/Main/apps/mainServer && docker compose pull"
+            validate_certs: no
+          register: pull_result
+          
+        - name: Execute docker compose up via API
+          uri:
+            url: "{{ truenas_api_url }}/filesystem/exec"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ truenas_api_key }}"
+              Content-Type: "application/json"
+            body_format: json
+            body:
+              command: "cd /mnt/Main/apps/mainServer && docker compose up -d"
+            validate_certs: no
+          register: up_result
+          
+        - name: Clean up old images
+          uri:
+            url: "{{ truenas_api_url }}/filesystem/exec"
+            method: POST
+            headers:
+              Authorization: "Bearer {{ truenas_api_key }}"
+              Content-Type: "application/json"
+            body_format: json
+            body:
+              command: "docker image prune -af"
+            validate_certs: no
+          register: prune_result
+          
+        - name: Display Docker update results
+          debug:
+            msg: "Docker containers updated successfully"
+      when: not app_exists
+      
+    - name: Wait for services to stabilize
+      pause:
+        seconds: 30
+        
+    - name: Check service health
+      uri:
+        url: "http://{{ truenas_host }}:{{ item.port }}{{ item.path | default('') }}"
+        method: GET
+        status_code: [200, 301, 302, 401]
+        timeout: 10
+      loop:
+        - { name: "Jellyfin", port: 8096 }
+        - { name: "Radarr", port: 7878 }
+        - { name: "Sonarr", port: 8989 }
+        - { name: "SABnzbd", port: 6789 }
+        - { name: "Ombi", port: 3579 }
+        - { name: "Immich", port: 2283 }
+      register: health_checks
+      ignore_errors: yes
+      
+    - name: Display health status
+      debug:
+        msg: "{{ item.item.name }}: {{ 'Online' if item.status in [200, 301, 302, 401] else 'Check Required' }}"
+      loop: "{{ health_checks.results }}"
