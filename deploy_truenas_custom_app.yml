@@ -1,0 +1,192 @@
+---
+- name: Create TrueNAS Custom App via API
+  hosts: localhost
+  gather_facts: no
+  
+  vars_files:
+    - vars/truenas.yml
+    
+  vars:
+    app_name: "mainserver"  # TrueNAS requires lowercase names
+    docker_compose_file: "mainServer.yaml"
+    env_file: "mainServer.env"
+    
+  tasks:
+    - name: Validate TrueNAS API key is set
+      fail:
+        msg: "TRUENAS_API_KEY not configured in vars/truenas.yml"
+      when: truenas_api_key is not defined or truenas_api_key == ""
+      
+    - name: Test API connectivity
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/system/info"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+      register: api_test
+      
+    - name: Display TrueNAS version
+      debug:
+        msg: "Connected to TrueNAS {{ api_test.json.version }}"
+        
+    - name: Check if app already exists
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/app"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+      register: existing_apps
+      
+    - name: Stop existing app if present
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/app/id/{{ app_name }}/stop"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+        status_code: [200, 404]
+      when: app_name in (existing_apps.json | map(attribute='name') | list)
+      
+    - name: Delete existing app if present
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/app/id/{{ app_name }}"
+        method: DELETE
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+        status_code: [200, 404]
+      when: app_name in (existing_apps.json | map(attribute='name') | list)
+      
+    - name: Wait for deletion to complete
+      pause:
+        seconds: 10
+      when: app_name in (existing_apps.json | map(attribute='name') | list)
+      
+    - name: Read docker-compose file
+      set_fact:
+        compose_content: "{{ lookup('file', docker_compose_file) }}"
+        
+    - name: Read environment variables
+      set_fact:
+        env_vars:
+          DATA_LOCATION: "/mnt/Main/Media"
+          DB_PASSWORD: "{{ db_password }}"
+          DB_USERNAME: "postgres"
+          DB_DATABASE_NAME: "immich"
+          DB_HOSTNAME: "immich_postgres"
+          REDIS_HOSTNAME: "immich_redis"
+          UID: "1000"
+          GID: "1000"
+          
+    - name: Replace environment variables in compose file
+      set_fact:
+        compose_with_env: "{{ compose_content | regex_replace('\\${DATA_LOCATION}', env_vars.DATA_LOCATION) | regex_replace('\\${DB_PASSWORD}', env_vars.DB_PASSWORD) | regex_replace('\\${DB_USERNAME}', env_vars.DB_USERNAME) | regex_replace('\\${DB_DATABASE_NAME}', env_vars.DB_DATABASE_NAME) | regex_replace('\\${DB_HOSTNAME}', env_vars.DB_HOSTNAME) | regex_replace('\\${REDIS_HOSTNAME}', env_vars.REDIS_HOSTNAME) | regex_replace('\\${UID}', env_vars.UID) | regex_replace('\\${GID}', env_vars.GID) }}"
+      
+    - name: Parse compose YAML to dictionary
+      set_fact:
+        compose_dict: "{{ compose_with_env | from_yaml }}"
+        
+    - name: Create custom app with docker-compose
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/app"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          app_name: "{{ app_name }}"
+          custom_app: true
+          custom_compose_config: "{{ compose_dict }}"
+        validate_certs: no
+        status_code: [200, 201, 400, 409, 422, 500]
+      register: app_create
+      ignore_errors: yes
+      
+    - name: Display API response
+      debug:
+        msg: |
+          Status Code: {{ app_create.status | default('N/A') }}
+          Response Body: {{ app_create.json | default(app_create.msg) | default('No response body') }}
+          Job ID: {{ app_create.json if (app_create.status | default(0)) == 200 else 'N/A' }}
+          
+    - name: Wait for job to complete (if job ID returned)
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/core/job/{{ app_create.json }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+      register: job_status
+      until: (job_status.json is defined and (job_status.json.state == 'SUCCESS' or job_status.json.state == 'FAILED')) or job_status.status == 404
+      retries: 30
+      delay: 5
+      when: (app_create.status | default(0)) == 200 and app_create.json | default('') | string is match('^[0-9]+$')
+      ignore_errors: yes
+      
+    - name: Display job result
+      debug:
+        msg: |
+          Job State: {{ job_status.json.state | default('N/A') }}
+          Job Result: {{ job_status.json.result | default('N/A') }}
+          Job Error: {{ job_status.json.error | default('None') }}
+      when: job_status is defined and job_status.json is defined
+      
+    - name: Check if app was actually created
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/app"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+      register: apps_after_create
+      
+    - name: Display apps after creation attempt
+      debug:
+        msg: |
+          Apps found: {{ apps_after_create.json | map(attribute='name') | list }}
+          mainServer present: {{ app_name in (apps_after_create.json | map(attribute='name') | list) }}
+      
+    - name: Start the application
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/app/id/{{ app_name }}/start"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+        status_code: [200, 201, 404]
+      when: app_name in (apps_after_create.json | map(attribute='name') | list)
+      register: app_start
+      ignore_errors: yes
+      
+    - name: Wait for app to be ready
+      pause:
+        seconds: 30
+        
+    - name: Get app status
+      uri:
+        url: "https://{{ truenas_host }}/api/v2.0/app/id/{{ app_name }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ truenas_api_key }}"
+        validate_certs: no
+      register: app_status
+      
+    - name: Display app status
+      debug:
+        msg: |
+          Application: {{ app_status.json.name }}
+          State: {{ app_status.json.state }}
+          
+    - name: Display access URLs
+      debug:
+        msg: |
+          Services available at:
+          - Jellyfin: http://{{ truenas_host }}:8096
+          - Radarr: http://{{ truenas_host }}:7878
+          - Sonarr: http://{{ truenas_host }}:8989
+          - SABnzbd: http://{{ truenas_host }}:6789
+          - Ombi: http://{{ truenas_host }}:3579
+          - Immich: http://{{ truenas_host }}:2283

@@ -1,0 +1,74 @@
+---
+- name: Homelab Management Playbook
+  hosts: localhost
+  gather_facts: no
+  
+  vars_prompt:
+    - name: action
+      prompt: |
+        Select action:
+        1) Update all Raspberry Pis
+        2) Deploy mainServer to TrueNAS  
+        3) Restart all services
+        4) Check health status
+        5) Backup configurations
+        Enter choice
+      private: no
+      
+  tasks:
+    - name: Update all Raspberry Pis
+      include_tasks: update_all_pis.yml
+      when: action == "1"
+      
+    - name: Deploy to TrueNAS
+      include_tasks: deploy_truenas_custom_app.yml
+      when: action == "2"
+      
+    - name: Restart all services
+      hosts: networkServer,automationServer,monitoringServer
+      become: yes
+      command:
+        cmd: "docker compose restart"
+        chdir: /opt/app
+      when: action == "3"
+      
+    - name: Check health status
+      block:
+        - name: Check Raspberry Pi health
+          hosts: networkServer,automationServer,monitoringServer
+          tasks:
+            - name: Check system resources
+              shell: |
+                echo "=== {{ inventory_hostname }} ==="
+                echo "Uptime: $(uptime)"
+                echo "Memory: $(free -h | grep Mem)"
+                echo "Disk: $(df -h /)"
+                echo "Docker: $(docker ps --format 'table {{.Names}}\t{{.Status}}' | head -5)"
+              register: health
+              
+            - name: Display health
+              debug:
+                msg: "{{ health.stdout_lines }}"
+      when: action == "4"
+      
+    - name: Backup configurations
+      block:
+        - name: Create backup directory
+          file:
+            path: ./backups/{{ ansible_date_time.date }}
+            state: directory
+            
+        - name: Backup Pi configurations
+          hosts: networkServer,automationServer,monitoringServer
+          tasks:
+            - name: Archive Docker volumes
+              archive:
+                path: /opt/app
+                dest: /tmp/{{ inventory_hostname }}_backup.tar.gz
+                
+            - name: Fetch backups
+              fetch:
+                src: /tmp/{{ inventory_hostname }}_backup.tar.gz
+                dest: ./backups/{{ ansible_date_time.date }}/
+                flat: yes
+      when: action == "5"
