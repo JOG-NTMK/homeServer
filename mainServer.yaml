@@ -5,14 +5,11 @@ services:
   jellyfin:
     image: linuxserver/jellyfin
     container_name: jellyfin
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities:
-                - gpu
-              count: 1
-              driver: nvidia
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "44"   # video
+      - "107"  # render
     environment:
       TZ: Europe/Dublin
     networks:
