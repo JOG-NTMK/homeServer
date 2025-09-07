@@ -20,6 +20,7 @@ services:
     volumes:
       - ${DATA_LOCATION}/jellyfin/config:/config
       - ${DATA_LOCATION}/jellyfin/media:/media
+      - ${CACHE_LOCATION}/jellyfin/transcodes:/transcodes
   radarr:
     container_name: radarr
     depends_on:
@@ -34,7 +35,7 @@ services:
     restart: unless-stopped
     volumes:
       - ${DATA_LOCATION}/radarr/config:/config
-      - ${DATA_LOCATION}/sabnzbd/downloads:/downloads
+      - ${CACHE_LOCATION}/sabnzbd/downloads:/downloads
       - ${DATA_LOCATION}/jellyfin/media/Movies:/movies
   sabnzbd:
     container_name: sabnzbd
@@ -48,8 +49,8 @@ services:
     restart: unless-stopped
     volumes:
       - ${DATA_LOCATION}/sabnzbd/config:/config
-      - ${DATA_LOCATION}/sabnzbd/downloads:/downloads
-      - ${DATA_LOCATION}/sabnzbd/incomplete:/incomplete-downloads
+      - ${CACHE_LOCATION}/sabnzbd/downloads:/downloads
+      - ${CACHE_LOCATION}/sabnzbd/incomplete:/incomplete-downloads
   sonarr:
     container_name: sonarr
     depends_on:
@@ -64,7 +65,7 @@ services:
     restart: unless-stopped
     volumes:
       - ${DATA_LOCATION}/sonarr/config:/config
-      - ${DATA_LOCATION}/sabnzbd/downloads:/downloads
+      - ${CACHE_LOCATION}/sabnzbd/downloads:/downloads
       - ${DATA_LOCATION}/jellyfin/media/Shows:/tv
   ombi:
     container_name: ombi
