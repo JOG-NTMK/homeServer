@@ -72,6 +72,7 @@
       set_fact:
         env_vars:
           DATA_LOCATION: "/mnt/Main/Media"
+          CACHE_LOCATION: "/mnt/cachepool/tmp"
           DB_PASSWORD: "{{ db_password }}"
           DB_USERNAME: "postgres"
           DB_DATABASE_NAME: "immich"
@@ -82,7 +83,7 @@
           
     - name: Replace environment variables in compose file
       set_fact:
-        compose_with_env: "{{ compose_content | regex_replace('\\${DATA_LOCATION}', env_vars.DATA_LOCATION) | regex_replace('\\${DB_PASSWORD}', env_vars.DB_PASSWORD) | regex_replace('\\${DB_USERNAME}', env_vars.DB_USERNAME) | regex_replace('\\${DB_DATABASE_NAME}', env_vars.DB_DATABASE_NAME) | regex_replace('\\${DB_HOSTNAME}', env_vars.DB_HOSTNAME) | regex_replace('\\${REDIS_HOSTNAME}', env_vars.REDIS_HOSTNAME) | regex_replace('\\${UID}', env_vars.UID) | regex_replace('\\${GID}', env_vars.GID) }}"
+        compose_with_env: "{{ compose_content | regex_replace('\\${DATA_LOCATION}', env_vars.DATA_LOCATION) | regex_replace('\\${CACHE_LOCATION}', env_vars.CACHE_LOCATION) | regex_replace('\\${DB_PASSWORD}', env_vars.DB_PASSWORD) | regex_replace('\\${DB_USERNAME}', env_vars.DB_USERNAME) | regex_replace('\\${DB_DATABASE_NAME}', env_vars.DB_DATABASE_NAME) | regex_replace('\\${DB_HOSTNAME}', env_vars.DB_HOSTNAME) | regex_replace('\\${REDIS_HOSTNAME}', env_vars.REDIS_HOSTNAME) | regex_replace('\\${UID}', env_vars.UID) | regex_replace('\\${GID}', env_vars.GID) }}"
       
     - name: Parse compose YAML to dictionary
       set_fact:
