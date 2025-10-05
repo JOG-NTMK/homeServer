@@ -1,17 +1,78 @@
 ---
-- name: Setup servers with Docker, Docker Compose, and application
+- name: Setup secure homelab servers
   hosts: all
   become: yes
 
   vars:
-    docker_file: "{{ docker_compose_file }}"
+    # Docker configuration
     docker_users:
       - jason
+
+    # Security hardening
     security_ssh_password_authentication: "yes"
+    security_ssh_port: 2222
+    security_ssh_permit_root_login: "no"
+    security_autoupdate_enabled: true
+
+    # Firewall rules
+    firewall_allowed_tcp_ports:
+      - "2222"   # SSH (default port - changed from 2222)
+      - "80"     # HTTP (NPM)
+      - "443"    # HTTPS (NPM)
+      - "53"     # DNS TCP (Pi-hole)
+      - "8017"   # Pi-hole admin (direct access)
+      - "8456"   # Dashy (direct access)
+      - "8123"   # Home Assistant (direct access)
+      - "1883"   # MQTT (IoT devices)
+      - "9001"   # MQTT WebSocket
+      - "9090"   # Prometheus (direct access)
+      - "3000"   # Grafana (direct access)
+      - "9100"   # Node Exporter (Proansible-playbook setup_servers.yml -l network-server -vvvmetheus scraping)
+      - "5201"   # iPerf3
+    firewall_allowed_udp_ports:
+       - "53"     # DNS UDP (Pi-hole)
+
+    # Monitoring
     prometheus_node_exporter_version: 1.8.2
 
   roles:
     - geerlingguy.pip
     - geerlingguy.docker
     - geerlingguy.security
+    - geerlingguy.firewall
     - UnderGreen.prometheus-node-exporter
+
+  tasks:
+    - name: Configure Docker daemon for security
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "log-driver": "json-file",
+            "log-opts": {
+              "max-size": "10m",
+              "max-file": "3"
+            },
+            "live-restore": true,
+            "userland-proxy": false
+          }
+      notify: restart docker
+
+    - name: Set secure kernel parameters
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { name: 'net.ipv4.conf.all.rp_filter', value: '1' }
+        - { name: 'net.ipv4.icmp_echo_ignore_broadcasts', value: '1' }
+        - { name: 'net.ipv4.conf.all.accept_source_route', value: '0' }
+        - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
+        - { name: 'net.ipv4.conf.all.log_martians', value: '1' }
+
+  handlers:
+    - name: restart docker
+      service:
+        name: docker
+        state: restarted
