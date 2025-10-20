@@ -14,6 +14,20 @@ services:
       - "8123:8123"
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: ghcr.io/koenkk/zigbee2mqtt
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /automationServer/zigbee2mqtt:/app/data
+      - /run/udev:/run/udev:ro
+    environment:
+      PUID: $UID
+      PGID: $GID
+      TZ: Europe/Dublin
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: mosquitto
