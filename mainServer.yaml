@@ -21,6 +21,8 @@ services:
       - ${DATA_LOCATION}/jellyfin/config:/config
       - ${DATA_LOCATION}/jellyfin/media:/media
       - ${CACHE_LOCATION}/jellyfin/transcodes:/transcodes
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
   radarr:
     container_name: radarr
     depends_on:
@@ -127,5 +129,18 @@ services:
     restart: unless-stopped
     volumes:
       - ${DATA_LOCATION}/immich/pg_database:/var/lib/postgresql/data
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+      - WATCHTOWER_TIMEOUT=30s
+      - WATCHTOWER_ROLLING_RESTART=true
+    restart: unless-stopped
+    networks:
+      - media_network
 volumes:
-  model-cache: Null
+  model-cache: null
