@@ -55,3 +55,9 @@ services:
     image: containrrr/watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+      - WATCHTOWER_TIMEOUT=30s
+      - WATCHTOWER_ROLLING_RESTART=true
+    restart: unless-stopped
