@@ -142,5 +142,15 @@ services:
     restart: unless-stopped
     networks:
       - media_network
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    environment:
+      DOMAIN: "https://vw.jasonntmk.com"
+    volumes:
+      - ${DATA_LOCATION}/vaultwarden:/data/
+    ports:
+      - '7456:80'
 volumes:
   model-cache: null
