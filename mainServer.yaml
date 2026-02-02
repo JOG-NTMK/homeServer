@@ -152,5 +152,29 @@ services:
       - ${DATA_LOCATION}/vaultwarden:/data/
     ports:
       - '7456:80'
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_VULKAN=1
+    devices:
+      - /dev/dri:/dev/dri
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - open-webui:/app/backend/data
+    restart: unless-stopped
 volumes:
   model-cache: null
+  ollama:
+  open-webui:
