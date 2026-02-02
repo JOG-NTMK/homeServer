@@ -61,3 +61,11 @@ services:
       - WATCHTOWER_TIMEOUT=30s
       - WATCHTOWER_ROLLING_RESTART=true
     restart: unless-stopped
+  wyoming-piper:
+    image: rhasspy/wyoming-piper:2.1.2
+    container_name: wyoming-piper
+    command: >
+      --voice en_US-amy-medium
+    ports:
+      - "10200:10200"
+    restart: unless-stopped

@@ -174,6 +174,15 @@ services:
     volumes:
       - open-webui:/app/backend/data
     restart: unless-stopped
+  wyoming-whisper:
+    image: rhasspy/wyoming-whisper
+    container_name: wyoming-whisper
+    command: >
+      --model small
+      --language en
+    ports:
+      - "10300:10300"
+    restart: unless-stopped
 volumes:
   model-cache: null
   ollama:
