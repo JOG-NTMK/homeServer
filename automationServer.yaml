@@ -14,6 +14,13 @@ services:
       - "8123:8123"
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0
+  music-assistant:
+    image: ghcr.io/music-assistant/server:latest
+    container_name: music-assistant
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /automationServer/music-assistant/data:/data/
   zigbee2mqtt:
     container_name: zigbee2mqtt
     image: ghcr.io/koenkk/zigbee2mqtt

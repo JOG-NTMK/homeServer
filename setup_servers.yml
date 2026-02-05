@@ -23,6 +23,7 @@
       - "8017"   # Pi-hole admin (direct access)
       - "8456"   # Dashy (direct access)
       - "8123"   # Home Assistant (direct access)
+      - "8095"   # Music Assistant (direct access)
       - "1883"   # MQTT (IoT devices)
       - "9001"   # MQTT WebSocket
       - "9090"   # Prometheus (direct access)
