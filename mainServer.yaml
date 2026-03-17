@@ -175,7 +175,7 @@ services:
       - ${DATA_LOCATION}/open-webui:/app/backend/data
     restart: unless-stopped
   wyoming-whisper:
-    image: pigeekcom/wyoming-faster-whisper-rocm:latest
+    build: https://github.com/JOG-NTMK/wyoming-faster-whisper-rocm-docker.git
     container_name: wyoming-faster-whisper-rocm
     restart: unless-stopped
     devices:
@@ -189,10 +189,12 @@ services:
     shm_size: "8gb"
     ports:
       - "10300:10300"
-    environment:
-      WYOMING_MODEL: medium
-      WYOMING_COMPUTE_TYPE: int8
-      HSA_OVERRIDE_GFX_VERSION: "11.0.0"
+    volumes:
+      - ./data:/data
+    command:
+      - --model=medium.en
+      - --language=en
+      - --beam-size="3"
 volumes:
   model-cache: null
   ollama:
