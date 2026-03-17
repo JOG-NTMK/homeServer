@@ -175,14 +175,24 @@ services:
       - ${DATA_LOCATION}/open-webui:/app/backend/data
     restart: unless-stopped
   wyoming-whisper:
-    image: rhasspy/wyoming-whisper
-    container_name: wyoming-whisper
-    command: >
-      --model small
-      --language en
+    image: pigeekcom/wyoming-faster-whisper-rocm:latest
+    container_name: wyoming-faster-whisper-rocm
+    restart: unless-stopped
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    group_add:
+      - video
+    security_opt:
+      - seccomp=unconfined
+    ipc: host
+    shm_size: "8gb"
     ports:
       - "10300:10300"
-    restart: unless-stopped
+    environment:
+      WYOMING_MODEL: medium
+      WYOMING_COMPUTE_TYPE: int8
+      HSA_OVERRIDE_GFX_VERSION: "11.0.0"
 volumes:
   model-cache: null
   ollama:

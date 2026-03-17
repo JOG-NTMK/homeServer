@@ -31,8 +31,14 @@
       - "9100"   # Node Exporter (Proansible-playbook setup_servers.yml -l network-server -vvvmetheus scraping)
       - "5201"   # iPerf3
       - "2413"   # zigbee2mqtt
+      - "10200"  # piper
+      - "1704"   # snapserver
+      - "1705"   # snapserver
+      - "4953:5153" # Music Assistant
+      - "6052"   # espHome
     firewall_allowed_udp_ports:
        - "53"     # DNS UDP (Pi-hole)
+       - "5353"   # mDNS
 
     # Monitoring
     prometheus_node_exporter_version: 1.8.2

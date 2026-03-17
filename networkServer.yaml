@@ -15,15 +15,11 @@ services:
     image: pihole/pihole:latest
     container_name: pihole
     restart: unless-stopped
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "8017:8080/tcp"
-      - "8043:443/tcp"
+    network_mode: host
     environment:
       TZ: Europe/Dublin
       FTLCONF_webserver_api_password: $PIPASSWORD
-      FTLCONF_dns_listeningMode: 'all'
+      FTLCONF_webserver_port: '8017o,[::]:8017o,8043os,[::]:8043os'
     labels:
       com.centurylinklabs.watchtower.enable: "false" # Exclude pihole from Watchtower updates
     # Volumes store your data between container upgrades
