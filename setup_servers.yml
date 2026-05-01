@@ -34,8 +34,11 @@
       - "10200"  # piper
       - "1704"   # snapserver
       - "1705"   # snapserver
+      - "1780"   # snapserver
       - "4953:5153" # Music Assistant
       - "6052"   # espHome
+      - "2223"   # GitLab git-over-SSH
+      - "8929"   # GitLab HTTP (behind NPM)
     firewall_allowed_udp_ports:
        - "53"     # DNS UDP (Pi-hole)
        - "5353"   # mDNS
