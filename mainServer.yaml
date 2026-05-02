@@ -198,8 +198,12 @@ services:
         registry_nginx['listen_https'] = false
     volumes:
       - ${DATA_LOCATION}/gitlab/config:/etc/gitlab
-      - ${DATA_LOCATION}/gitlab/logs:/var/log/gitlab
       - ${DATA_LOCATION}/gitlab/data:/var/opt/gitlab
+      - ${CACHE_LOCATION}/gitlab/logs:/var/log/gitlab
+      - ${CACHE_LOCATION}/gitlab/tmp:/var/opt/gitlab/gitlab-rails/tmp
+      - ${CACHE_LOCATION}/gitlab/shared-cache:/var/opt/gitlab/gitlab-rails/shared/cache
+      - ${CACHE_LOCATION}/gitlab/ci-builds:/var/opt/gitlab/gitlab-ci/builds
+      - ${CACHE_LOCATION}/gitlab/prometheus:/var/opt/gitlab/prometheus
     shm_size: '256m'
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
@@ -215,6 +219,7 @@ services:
       TZ: Europe/Dublin
     volumes:
       - ${DATA_LOCATION}/gitlab-runner/config:/etc/gitlab-runner
+      - ${CACHE_LOCATION}/gitlab-runner:/cache
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
