@@ -184,6 +184,7 @@ services:
     ports:
       - '8929:80'
       - '2223:22'
+      - '5050:5050'
     environment:
       TZ: Europe/Dublin
       GITLAB_OMNIBUS_CONFIG: |
@@ -191,6 +192,10 @@ services:
         nginx['listen_port'] = 80
         nginx['listen_https'] = false
         gitlab_rails['gitlab_shell_ssh_port'] = 2223
+        registry_external_url 'https://registry.jasonntmk.com'
+        gitlab_rails['registry_enabled'] = true
+        registry_nginx['listen_port'] = 5050
+        registry_nginx['listen_https'] = false
     volumes:
       - ${DATA_LOCATION}/gitlab/config:/etc/gitlab
       - ${DATA_LOCATION}/gitlab/logs:/var/log/gitlab
